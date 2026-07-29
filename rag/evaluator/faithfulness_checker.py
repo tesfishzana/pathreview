@@ -1,6 +1,7 @@
 """Check if generated feedback is supported by retrieved context."""
 
 import re
+
 import structlog
 
 logger = structlog.get_logger()
@@ -20,8 +21,11 @@ class FaithfulnessChecker:
             Faithfulness score 0.0-1.0 (ratio of supported claims)
         """
         if not feedback or not context_chunks:
-            logger.info("faithfulness_empty_input", has_feedback=bool(feedback),
-                       has_chunks=bool(context_chunks))
+            logger.info(
+                "faithfulness_empty_input",
+                has_feedback=bool(feedback),
+                has_chunks=bool(context_chunks),
+            )
             return 0.0
 
         # Extract key claims from feedback (sentences)
@@ -30,10 +34,8 @@ class FaithfulnessChecker:
             logger.info("faithfulness_no_claims_extracted")
             return 0.5  # Default to neutral if no extractable claims
 
-        # Concatenate context text
-        context_text = " ".join([
-            chunk.get("text", "") for chunk in context_chunks
-        ])
+        # Concatenate context text, guarding against None values in chunks
+        context_text = " ".join([chunk.get("text") or "" for chunk in context_chunks])
 
         # Check each claim for support
         supported = 0
@@ -43,8 +45,9 @@ class FaithfulnessChecker:
 
         score = supported / len(claims) if claims else 0.0
 
-        logger.info("faithfulness_checked", claims_count=len(claims),
-                   supported_count=supported, score=score)
+        logger.info(
+            "faithfulness_checked", claims_count=len(claims), supported_count=supported, score=score
+        )
 
         return score
 
@@ -59,8 +62,12 @@ class FaithfulnessChecker:
             List of claims (sentences)
         """
         # Split by sentence (simple regex)
-        sentences = re.split(r'[.!?]+', text)
-        claims = [s.strip() for s in sentences if s.strip() and len(s.strip()) > 10]
+        sentences = re.split(r"[.!?]+", text)
+        # Also split each sentence at conjunctions to surface sub-claims
+        raw_claims: list[str] = []
+        for sentence in sentences:
+            raw_claims.extend(re.split(r"\s+and\s+", sentence, flags=re.IGNORECASE))
+        claims = [s.strip() for s in raw_claims if s.strip() and len(s.strip()) > 3]
         return claims[:10]  # Limit to 10 claims for scoring
 
     @staticmethod
@@ -74,15 +81,36 @@ class FaithfulnessChecker:
         Returns:
             True if claim is supported
         """
-        # Tokenize and check for keyword overlap
-        claim_tokens = set(claim.lower().split())
-        context_tokens = set(context.lower().split())
+        # Tokenize using word characters to handle embedded punctuation (commas, etc.)
+        claim_tokens = set(re.findall(r"\w+", claim.lower()))
+        context_tokens = set(re.findall(r"\w+", context.lower()))
 
         # Require at least some meaningful overlap
         overlap = claim_tokens & context_tokens
         # Filter out common stop words
-        stop_words = {'a', 'an', 'the', 'is', 'are', 'was', 'were', 'be', 'been',
-                     'and', 'or', 'but', 'in', 'of', 'to', 'for', 'that'}
+        stop_words = {
+            "a",
+            "an",
+            "the",
+            "is",
+            "are",
+            "was",
+            "were",
+            "be",
+            "been",
+            "and",
+            "or",
+            "but",
+            "in",
+            "of",
+            "to",
+            "for",
+            "that",
+        }
         meaningful_overlap = overlap - stop_words
 
-        return len(meaningful_overlap) >= 2
+        # Claims with 5 or fewer meaningful tokens need only 1 keyword match;
+        # longer claims require 2 to reduce false positives.
+        claim_meaningful = claim_tokens - stop_words
+        required_overlap = 1 if len(claim_meaningful) <= 5 else 2
+        return len(meaningful_overlap) >= required_overlap

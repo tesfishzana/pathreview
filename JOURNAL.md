@@ -25,7 +25,7 @@ The `FaithfulnessChecker` in `rag/evaluator/faithfulness_checker.py` has two com
 
 ## Week 8 — Reproduction & solution planning
 
-**Reproduction commit link:** [docs: add PLAN.md and Week 8 reproduction notes for #152](https://github.com/tesfishzana/pathreview/tree/fix/152-faithfulness-short-claims)
+**Reproduction commit link:** [docs: add PLAN.md and Week 8 reproduction notes for #152](https://github.com/tesfishzana/pathreview/commit/93feec4)
 
 **Reproduction summary:**
 Ran `pytest tests/unit/test_faithfulness_checker.py` targeting the three tests named in the issue. All three failed with `assert 0.2 < 0.0` — confirming that every call to `checker.check()` on short-claim feedback returns `0.0`. The log output showed `claims_count=1` for inputs that should have produced 3 claims, and `supported_count=0` even when the single extracted claim had clear keyword overlap with the context.

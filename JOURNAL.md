@@ -36,3 +36,36 @@ Ran `pytest tests/unit/test_faithfulness_checker.py` targeting the three tests n
 
 **Blockers or open questions:**
 None — confirmed locally that `len(s.strip()) > 3` retains all target claims including `"Knows Rust"` (10 chars). The two-part fix (lower length threshold + short-claim overlap guard) is fully scoped to `faithfulness_checker.py` with no external dependencies or API calls needed.
+
+---
+
+## Week 9 — Solution building & PR submission
+
+### Check-in 1 (mid-week)
+
+**Current progress:**
+Completed all implementation. The fix touched `_extract_claims()`, `_is_supported()`, and the `check()` context-join line — all within the single file `rag/evaluator/faithfulness_checker.py`. Four bugs were resolved: the `> 10` length filter, `.split()` keeping commas on tokens, the `>= 2` overlap threshold being too high for short claims, and `chunk.get("text", "")` returning `None` when the key exists with a `None` value. All 22 unit tests pass; ruff, black, and mypy all clean.
+
+**Next steps:**
+Push the implementation commit, open a draft PR against `ascherj/pathreview`, fill in the PR template, and mark ready for review.
+
+**Blockers:**
+None.
+
+---
+
+### Check-in 2 (end of week)
+
+**PR link:** [fix(rag): repair faithfulness checker for short claims — #152](https://github.com/tesfishzana/pathreview/compare/main...tesfishzana:pathreview:fix/152-faithfulness-short-claims)
+
+**Branch:** `fix/152-faithfulness-short-claims`
+
+**What you built:**
+Fixed four compounding bugs in `FaithfulnessChecker` that caused every short claim to score 0.0. The solution lowers the min-character filter in `_extract_claims()` from `> 10` to `> 3`, adds a conjunction split so multi-claim sentences produce separate scoreable sub-claims, switches tokenization in `_is_supported()` from `.split()` to `re.findall(r'\w+')` to strip embedded punctuation, and applies a 1-token overlap threshold for claims with ≤ 5 meaningful tokens (vs. 2 for longer claims). A fourth fix guards against `None` values in context chunk text.
+
+**Tests added or updated:**
+No new tests were needed — `tests/unit/test_faithfulness_checker.py` already contained 22 tests covering all cases, including the three named failing tests. All 22 pass after the fix.
+
+**Self-review confirmation:** [x] make check passes  [x] make test-unit passes
+
+**Draft PR feedback received from:** none

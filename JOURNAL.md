@@ -20,3 +20,19 @@ The `FaithfulnessChecker` in `rag/evaluator/faithfulness_checker.py` has two com
 **Setup confirmation:** [ ] App runs locally at localhost:5173
 
 **Cohort ledger:** [ ] Issue added to cohort ledger
+
+---
+
+## Week 8 — Reproduction & solution planning
+
+**Reproduction commit link:** [docs: add PLAN.md and Week 8 reproduction notes for #152](https://github.com/tesfishzana/pathreview/tree/fix/152-faithfulness-short-claims)
+
+**Reproduction summary:**
+Ran `pytest tests/unit/test_faithfulness_checker.py` targeting the three tests named in the issue. All three failed with `assert 0.2 < 0.0` — confirming that every call to `checker.check()` on short-claim feedback returns `0.0`. The log output showed `claims_count=1` for inputs that should have produced 3 claims, and `supported_count=0` even when the single extracted claim had clear keyword overlap with the context.
+
+**PLAN.md link:** [PLAN.md](https://github.com/tesfishzana/pathreview/blob/fix/152-faithfulness-short-claims/PLAN.md)
+
+**Walkthrough video (recommended):** [pending]
+
+**Blockers or open questions:**
+None — confirmed locally that `len(s.strip()) > 3` retains all target claims including `"Knows Rust"` (10 chars). The two-part fix (lower length threshold + short-claim overlap guard) is fully scoped to `faithfulness_checker.py` with no external dependencies or API calls needed.

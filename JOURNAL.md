@@ -69,3 +69,36 @@ No new tests were needed — `tests/unit/test_faithfulness_checker.py` already c
 **Self-review confirmation:** [x] make check passes  [x] make test-unit passes
 
 **Draft PR feedback received from:** none
+
+---
+
+## Week 10 — Iteration & reflection
+
+### Reviewer feedback
+
+**Feedback received:** [ ] Yes  [x] No — still awaiting review
+
+**Summary of feedback:**
+No reviewer feedback was provided in Summer 2026, so there were no maintainer comments to address or revise against.
+
+**How you responded:**
+No direct follow-up was needed. I kept the implementation and documentation focused on the issue scope and the final submission checklist.
+
+---
+
+### Reflection
+
+**What was harder than you expected?**
+The hardest part was not the bug itself — it was tracing the real root cause across several compounding assumptions inside a single evaluator. The issue looked like a small threshold bug at first, but the deeper problems were a combination of sentence splitting, punctuation handling, overlap logic, and missing `None` guards. Each one had to be verified against the actual tests before I could confidently fix it.
+
+**What did you learn about working in a large codebase?**
+I learned that production code often fails in subtle ways because it assumes a narrow set of inputs. In a large codebase, a bug can appear simple from the issue description but still hide several edge cases: punctuation, partial claims inside a sentence, and values like `None` that aren't obvious in a clean example. Contributing cleanly means checking the surrounding conventions, verifying the existing test patterns, and making sure the fix is narrow but robust.
+
+**How did AI tools help — and where did they fall short?**
+AI was especially useful for narrowing the bug to the exact file, understanding the likely failure mode, and suggesting a fix path grounded in the existing tests. It helped me quickly reason about the `FaithfulnessChecker` logic and check whether the symptoms fit the issue description. Where AI fell short was in verification: it could propose fixes quickly, but I still had to run the tests, inspect the actual failing assertions, and confirm that each hypothesis matched the real runtime behavior before deciding on the final patch.
+
+**What would you do differently if you started over?**
+I would start by reading the exact failing tests and reproducing the bug even more aggressively before changing code. I also would keep the plan more explicitly tied to the named test cases and avoid adding extra speculative logic beyond the issue scope. The fix turned out to be small, but a tighter loop of reproduction -> hypothesis -> targeted fix -> verification would have reduced the churn in the middle of implementation.
+
+**What are you most proud of from this module?**
+I’m most proud that I completed the full contribution workflow: issue selection, reproduction, solution planning, implementation, verification, and documentation. The most satisfying part was turning a seemingly small bug into a well-scoped fix with evidence from the tests and a clean final submission record.
